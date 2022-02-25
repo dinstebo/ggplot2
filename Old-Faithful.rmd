@@ -1,0 +1,207 @@
+---
+title: "ggplot2 og tidyverse"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Dette dokumentet inneholder all kode du trenger for å gjennomføre enkle visualiseringer i ggplot2 ved bruk av R. Dokumentet er et RMarkdown-dokument som betyr at koden er i kodeblokker, mens restena v dokumentet bruker Markdown-syntaks. 
+
+### Dependencies
+Vi bruker noen ulike pakker for denne tutorialen, men alle pakkene er del av Hadley Wickhams tidyverse-univers. Vi trenger kun å kalle på tidyverse for å gjennomføre alle visualiseringer i dette dokumentet.
+
+```{r, echo=FALSE}
+library(tidyverse)
+```
+
+### Datasets
+Vi kommer til å benytte en del av R sine innebygde datasett for å lage visualiseringene. I denne guiden er det ikke viktig hvilke data man bruker, men å vise hvordan man går frem for å benytte seg av ulike visualiseringer. For å få en oversikt over hvilke data som er inkludert i R, så kan du benytte funksjonen `data()`. Selv om det ikke er strengt nødvendig, kan du også hente ditt ønskede innebygde datasett med funksjonen `data(<navn>)`. 
+
+```{r}
+data()
+```
+
+
+Du kan alltid få en oversikt over de ulike datasettene ved å benytte kommandoene `head()`, `tail()`, `str()`, og `summarize()`. 
+
+## Introduksjon
+Det første datasettet vi skal benytte oss av er et datasett som heter *faithful*. For å få mer informasjon om et innebygget datasett (eller en pakke) kan du skrive `?faithful`
+
+```{r}
+?faithful
+```
+
+Faithful-datasettet viser ventetiden og varigheten av et utbrudd fra varmekilden *Old Faithful* i Yellowstone National Park. Det er et veldig enkelt datasett med kun to variabler og 272 observasjoner.
+
+* Variabelen *eruptions* viser hvor lenge et utbrudd varer (i minutter)
+* Variabelen *waiting* viser ventetiden til neste utbrudd (i minutter)
+
+Aller først sjekker vi strukturen på datasettet, for å bli enda bedre kjent med dataene vi skal visualisere
+
+```{r}
+str(faithful)
+```
+
+Så, for sikkerhets skyld, sjekker vi de 10 øverste observasjonene.
+
+```{r}
+head(faithful, 10)
+```
+
+Siden dette er våres første plot, kan vi starte helt ved begynnelsen. Vi kaller `ggplot()`
+
+```{r}
+ggplot()
+```
+
+Vi ser at vi har et helt tomt plot, uten et koordinatsystem overhodet. Dette er fordi vi ikke har angitt noe data, og heller ikke hva som skal være på vår x-akse og y-akse.
+
+```{r}
+ggplot(data = faithful, 
+       mapping = aes(x = eruptions, y = waiting))
+```
+
+ggplot er veldig fleksibelt. Man har mange default-verdier, og som regel følger man en ganske fast oppskrift når man bruker ggplot. Det er ikke nødvendig å skrive `data =` og `mapping =`. De fleste unngår dette for å korte ned på koden og gjøre den mer oversiktlig. For å få en bedre oversikt over valgmuligheter i ggplot, kan man alltids slå opp i `?ggplot()` eller benytte seg av cheat sheets. 
+
+```{r}
+ggplot(faithful, 
+       aes(x = eruptions, y = waiting))
+```
+
+Strengt tatt så kan man gjøre det enda enklere enn dette også. Første verdi inni `aes()` vil alltid være x-akse og andre verdi vil alltid være y-akse. Men samtidig må man veie ulike hensyn. Desto mer man forenkler, desto vanskeligere er det å lese koden og drive feilretting. Dette kan være spesielt viktig etter hvert som ggplot-funksjonen vokser og vokser. Etter hvert kan den bli ganske omfattende. Jeg anbefaler alle å finne en mellomting hvor man er tydelig på hvilke valg man har gjort.
+
+```{r}
+# ikke nødvendigvis anbefalt fremgangsmåte:
+ggplot(faithful, aes(eruptions, waiting))
+```
+
+
+Vi har nå laget et koordinatsystem og angitt hva som skal være på x-aksen og hva som skal være på y-aksen. Vi har fortalt ggplot hvilket datasett vi skal bruke, men vi har enda ikke fortalt hvilken *type* visualisering vi ønsker. Dette må vi gjøre i et nytt steg hvor vi angir en ny funksjon etter et plusstegn (+). Vi ønsker å lage et scatterplot med funksjonen `geom_point()`
+
+```{r}
+ggplot(faithful, 
+       aes(x = eruptions, y = waiting)) + 
+  geom_point()
+```
+
+Vi har nå laget vår første datavisualisering med ggplot2. Men det er fortsatt mye vi kan gjøre for å forbedre figuren vår. Det første jeg ønsker å gjøre er å gjøre punktene blå. Vi kan her velge om vi vil sette fargen *globalt*, det vil si inni `ggplot()`-funksjonen, eller kun for selve punkt-funksjonen. Husk at `geom_point()` bare er ett lag (layer) som er lagt oppå toppen. Vi kan for eksempel legge til mange andre visualiseringer (for eksempel en regresjonslinje) på toppen av scatterplottet. Dersom den ikke skal være blå, så må vi sette fargen *lokalt*.
+
+```{r}
+ggplot(faithful, 
+       aes(x = eruptions, y = waiting)) + 
+  geom_point(colour = 'steelblue')
+```
+
+Et annet alternativ er å laste kun datasettet i `ggplot()`-funksjonen, angi at du vil benytte deg av scatterplot ved å benytte `geom_point()`, også bruke et logisk uttrykk med argumentet `colour =`. Her har jeg skapt et skille mellom hvorvidt eruptions er mindre enn tre. Dette vil returnere en boolsk TRUE/FALSE betingelse, hvor verdier som er mindre enn 3 får grønn farge, og verdier som er større enn 3 får rød farge.
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting, colour = eruptions < 3))
+```
+
+Noen visualiseringer trenger kun én variabel og vil så gjøre resten av kalkuleringene selv. Under har vi angitt et histogram.
+
+```{r}
+ggplot(faithful) + 
+  geom_histogram(aes(x = eruptions))
+```
+
+Som nevnt så vil ggplot tegne figurene i den rekkefølgen de er lagt til. I visualiseringen under har jeg angitt at jeg ønsker både scatterplot og et 2d densityplot. Legg merke til at punktene er på et lag *over* densityplot'et.
+
+```{r}
+ggplot(faithful, aes(x = eruptions, y = waiting)) + 
+  geom_density_2d() + 
+  geom_point()
+```
+
+Å angi gjennomsiktighet for dataene er på kodespråket angitt med argumentet *aplha*. Vi kan også velge hvordan punktene skal se ut med argumentet *shape*. Her kan man enten skrive f.eks *square*, eller angi et tall mellom 1 og 25. Det er bare å prøve seg frem. Jeg har laget noen forsøk i underliggende kodeblokk. Siden dette kun er for å illustrere har jeg plassert all kode på én linje. Dette fordi det er enklere å "kommentere bort" visualiseringen. Ta bort `#` fra en av dem for å se visualiseringen.
+
+
+```{r}
+# Alpha: Desto lavere tall, desto mer gjennomsiktig
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), alpha = 0.1)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), alpha = 0.3)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), alpha = 0.5)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), alpha = 0.8)
+
+# Shape
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 1)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 2)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 3)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 4)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 5)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 6)
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), shape = 11)
+
+# Alpha og Shape i kombinasjon:
+ggplot(faithful) + geom_point(aes(x = eruptions, y = waiting), alpha = 0.4, shape = "square")
+```
+
+Vi ønsker fortsatt en litt blålig farge på punktene våres, men vi er også fornøyd med firkanter og en litt gjennomsiktig look:
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting), 
+                colour = 'steelblue', alpha = 0.6, shape = "square")
+```
+
+Plottet våres ser litt trist og grått ut. Vi bestemmer oss for å gjøre noen justeringer på tittel og aksetitler. Dette gjør vi ved å legge på et nytt layer som kalles `labs()`. Jeg tror dere nå begynner å skjønne tegningen (pun intended).
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting), 
+                colour = 'steelblue', alpha = 0.6, shape = "square") +
+  labs(x = "Utbruddets varighet (i minutter)",
+       y = "Ventetid (i minutter)",
+       title = "Old Faithfull, Yellowstone")
+```
+
+Det finnes mange forskjellige temaer i R. Man lærer seg fort hvilke tema man liker, men jeg har valgt ut et par som kan falle i god smak for de fleste. Her er `theme_light()`.
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting), 
+                colour = 'steelblue', alpha = 0.6, shape = "square") +
+  labs(x = "Utbruddets varighet (i minutter)",
+       y = "Ventetid (i minutter)",
+       title = "Old Faithfull, Yellowstone") +
+  theme_light()
+```
+
+Og her er `theme_bw()`:
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting), 
+                colour = 'steelblue', alpha = 0.6, shape = "square") +
+  labs(x = "Utbruddets varighet (i minutter)",
+       y = "Ventetid (i minutter)",
+       title = "Old Faithfull, Yellowstone") +
+  theme_bw()
+```
+
+Og her er `theme_dark()`:
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting), 
+                colour = 'steelblue', alpha = 0.6, shape = "square") +
+  labs(x = "Utbruddets varighet (i minutter)",
+       y = "Ventetid (i minutter)",
+       title = "Old Faithfull, Yellowstone") +
+  theme_dark()
+```
+
+Og her er `theme_minimal()`:
+
+```{r}
+ggplot(faithful) + 
+  geom_point(aes(x = eruptions, y = waiting), 
+                colour = 'steelblue', alpha = 0.6, shape = "square") +
+  labs(x = "Utbruddets varighet (i minutter)",
+       y = "Ventetid (i minutter)",
+       title = "Old Faithfull, Yellowstone") +
+  theme_minimal()
+```
